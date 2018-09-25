@@ -24,9 +24,13 @@
 */
 queue_t *q_new()
 {
-    queue_t *q = malloc(sizeof(queue_t));
+    queue_t *q = (queue_t *) malloc(sizeof(queue_t));
     /* What if malloc returned NULL? */
-    q->head = NULL;
+    if (q != NULL) {  // q!=NULL
+        q->size = 0;
+        q->head = NULL;
+        q->tail = NULL;
+    }
     return q;
 }
 
@@ -35,7 +39,13 @@ void q_free(queue_t *q)
 {
     /* How about freeing the list elements and the strings? */
     /* Free queue structure */
+    if (q == NULL)
+        return;
+    while (q->head != NULL) {
+        q_remove_head(q, NULL, 0);
+    }
     free(q);
+    return;
 }
 
 /*
@@ -49,11 +59,21 @@ bool q_insert_head(queue_t *q, char *s)
 {
     list_ele_t *newh;
     /* What should you do if the q is NULL? */
-    newh = malloc(sizeof(list_ele_t));
+    if (q == NULL)
+        return false;
     /* Don't forget to allocate space for the string and copy it */
+    newh = listEleNew(s);
+    if (newh == NULL)
+        return false;
     /* What if either call to malloc returns NULL? */
-    newh->next = q->head;
-    q->head = newh;
+    if (q->head == NULL) {
+        q->head = newh;
+        q->tail = newh;
+    } else {
+        newh->next = q->head;
+        q->head = newh;
+    }
+    q->size++;
     return true;
 }
 
@@ -68,8 +88,24 @@ bool q_insert_head(queue_t *q, char *s)
 bool q_insert_tail(queue_t *q, char *s)
 {
     /* You need to write the complete code for this function */
+    list_ele_t *newh;
+    /* What should you do if the q is NULL? */
+    if (q == NULL)
+        return false;
+    newh = listEleNew(s);
+    if (newh == NULL)
+        return false;
+    /* Don't forget to allocate space for the string and copy it */
     /* Remember: It should operate in O(1) time */
-    return false;
+    if (q->tail == NULL) {  // from zero to one
+        q->head = newh;
+        q->tail = newh;
+    } else {
+        q->tail->next = newh;
+        q->tail = newh;
+    }
+    q->size++;
+    return true;
 }
 
 /*
@@ -82,8 +118,33 @@ bool q_insert_tail(queue_t *q, char *s)
 */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
+    list_ele_t *temp;
+    int stringsize;
+
+    if (q == NULL || q->size == 0)
+        return false;
+
     /* You need to fix up this code. */
-    q->head = q->head->next;
+    temp = q->head;
+    if (q->head == q->tail) {  // from one to zero
+        q->head = NULL;
+        q->tail = NULL;
+    } else {
+        q->head = q->head->next;
+    }
+    stringsize = charCounter(temp->value);
+    if (bufsize > 0) {
+        if (bufsize < stringsize) {
+            strncpy(sp, temp->value, bufsize);
+            sp[bufsize - 1] = '\0';
+        } else {
+            strcpy(sp, temp->value);
+        }
+    }
+    free(temp->value);
+    free(temp);
+
+    q->size--;
     return true;
 }
 
@@ -95,6 +156,9 @@ int q_size(queue_t *q)
 {
     /* You need to write the code for this function */
     /* Remember: It should operate in O(1) time */
+    if (q) {
+        return q->size;
+    }
     return 0;
 }
 
@@ -108,4 +172,49 @@ int q_size(queue_t *q)
 void q_reverse(queue_t *q)
 {
     /* You need to write the code for this function */
+    list_ele_t *temp, *curr;
+    if (q == NULL)
+        return;
+    curr = q->head;
+    while (curr != q->tail) {
+        temp = curr;
+        curr = temp->next;
+        temp->next = (q->tail)->next;
+        (q->tail)->next = temp;
+    }
+
+    q->tail = q->head;  // swap head and tail
+    q->head = curr;
+}
+/*my basic tool*/
+int charCounter(char *s)
+{
+    int count = 0;
+    if (s == NULL)
+        return 0;
+    while (s[count] != '\0') {
+        count++;
+    }
+    return count + 1;
+}
+
+list_ele_t *listEleNew(char *s)
+{
+    list_ele_t *newh = NULL;
+    if (!s)
+        return NULL;  // input string NULL
+    newh = (list_ele_t *) malloc(sizeof(list_ele_t));
+    if (!newh)
+        return NULL;  // list element malloc fail
+    newh->value = (char *) malloc(charCounter(s) * sizeof(char));
+    if (newh->value == NULL) {  // malloc new char success
+        free(newh);
+        newh = NULL;
+        // printf("new name success size%d
+        // %s\n",charCounter(newh->value),newh->value);
+    } else {  // malloc new char array fail
+        strcpy(newh->value, s);
+        newh->next = NULL;
+    }
+    return newh;
 }

@@ -12,7 +12,9 @@
  */
 
 #include <stdbool.h>
-
+#include <stdlib.h>
+#include <stdlib.h>
+#include <stdio.h>
 /************** Data structure declarations ****************/
 
 /* Linked list element (You shouldn't need to change this) */
@@ -30,6 +32,8 @@ typedef struct {
                         You will need to add more fields to this structure
                         to efficiently implement q_size and q_insert_tail
                       */
+    list_ele_t *tail;
+    int size;
 } queue_t;
 
 /************** Operations on queue ************************/
@@ -88,3 +92,7 @@ int q_size(queue_t *q);
   It should rearrange the existing ones.
  */
 void q_reverse(queue_t *q);
+
+/*my basic tool*/
+list_ele_t *listEleNew(char *s);
+int charCounter(char *s);
